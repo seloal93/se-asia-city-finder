@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Southeast Asia City Finder — Top 20 Cities</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px 16px 60px;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    header h1 { font-size: 1.9rem; margin-bottom: 6px; }
+    header p { color: var(--muted); font-size: 0.96rem; max-width: 740px; margin: 0 auto; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .panel-header h2 { font-size: 1.05rem; }
+    .presets, .country-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    button {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.83rem;
+      transition: 0.15s;
+    }
+    button:hover, button.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .sliders {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 768px) {
+      .sliders {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 480px) {
+      .sliders {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .slider-box {
+      background: rgba(15, 23, 42, 0.55);
+      padding: 11px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .slider-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .weight-badge {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .slider-hint {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .count-label { color: var(--muted); font-size: 0.88rem; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .city-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 17px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .city-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .city-card.top-pick { border: 2px solid var(--good); }
+
+    .rank-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .top-pick .rank-badge {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--good);
+    }
+
+    .city-title { font-size: 1.2rem; font-weight: 700; padding-right: 95px; }
+    .city-country { color: var(--muted); font-size: 0.83rem; margin-bottom: 9px; }
+    .city-note {
+      font-size: 0.84rem;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 9px 11px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      color: #e2e8f0;
+      border-left: 3px solid var(--accent);
+    }
+
+    .metrics { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+    .metric-row { font-size: 0.8rem; }
+    .metric-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+      color: #cbd5e1;
+    }
+    .bar-bg {
+      height: 6px;
+      background: #0f172a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill { height: 100%; border-radius: 999px; }
+
+    .card-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-top: 9px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .footer-row span {
+      white-space: nowrap;
+    }
+    .footer-row strong {
+      color: #e2e8f0;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌏 Southeast Asia City Finder (Top 20 Cities)</h1>
+      <p>Adjust each priority from <strong>0</strong> ("Not important") to <strong>10</strong> ("Essential") — safety calibrated strictly for personal street safety.</p>
+    </header>
+
+    <!-- PRIORITY SLIDERS -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Your Priorities</h2>
+        <div class="presets">
+          <button onclick="applyPreset('balanced')">⚖️ Recommended Mix</button>
+          <button onclick="applyPreset('explorer')">🧭 Basecamp & Food</button>
+          <button onclick="applyPreset('chill')">🌿 Safe, Sunny & Chill</button>
+          <button onclick="applyPreset('budget')">💸 Best Value / Cheap</button>
+        </div>
+      </div>
+
+      <div class="sliders">
+        <div class="slider-box">
+          <div class="slider-top">
+            <span>📍 Central & Day Trips</span>
+            <span class="weight-badge" id="w-hub-val">9 / 10</span>
+          </div>
+          <input type="range" id="w-hub" min="0" max="10" value="9" oninput="render()" />
+          <div class="slider-hint">Islands, beaches, nature & regional flights</div>
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-top">
+            <span>🍽️ Great Food</span>
+            <span class="weight-badge" id="w-food-val">9 / 10</span>
+          </div>
+          <input type="range" id="w-food" min="0" max="10" value="9" oninput="render()" />
+          <div class="slider-hint">Street food, hawkers & local cuisine</div>
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-top">
+            <span>☀️ Good Weather</span>
+            <span class="weight-badge" id="w-weather-val">8 / 10</span>
+          </div>
+          <input type="range" id="w-weather" min="0" max="10" value="8" oninput="render()" />
+          <div class="slider-hint">Dry season sunshine vs. heavy monsoons</div>
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-top">
+            <span>🤝 Good People & Vibe</span>
+            <span class="weight-badge" id="w-vibe-val">8 / 10</span>
+          </div>
+          <input type="range" id="w-vibe" min="0" max="10" value="8" oninput="render()" />
+          <div class="slider-hint">Hospitality, openness & relaxed pace</div>
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-top">
+            <span>💰 Cheap Living</span>
+            <span class="weight-badge" id="w-cost-val">8 / 10</span>
+          </div>
+          <input type="range" id="w-cost" min="0" max="10" value="8" oninput="render()" />
+          <div class="slider-hint">10 = Very affordable daily costs</div>
+        </div>
+
+        <div class="slider-box">
+          <div class="slider-top">
+            <span>🛡️ Personal Street Safety</span>
+            <span class="weight-badge" id="w-safety-val">7 / 10</span>
+          </div>
+          <input type="range" id="w-safety" min="0" max="10" value="7" oninput="render()" />
+          <div class="slider-hint">Walking safely day/night (excludes corruption)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COUNTRY FILTER BAR -->
+    <div class="toolbar">
+      <div class="country-filters" id="country-filters"></div>
+      <div class="count-label" id="count-label"></div>
+    </div>
+
+    <!-- RANKED CITIES -->
+    <section class="grid" id="cities-grid"></section>
+  </div>
+
+  <script>
+    let selectedCountry = "All";
+
+    // Safety scores reflect strictly personal physical street safety (walking day/night, low street violence)
+    const cities = [
+      // MALAYSIA (3)
+      {
+        name: "Kuala Lumpur",
+        country: "Malaysia",
+        flag: "🇲🇾",
+        safety: 7.3, food: 9.2, cost: 7.8, weather: 7.1, vibe: 8.2, hub: 9.6,
+        mealPrice: "~3.00€ (15 MYR)",
+        note: "Major Southeast Asian aviation hub with ultra-diverse Malay, Chinese, and Indian food, modern transit, and safe everyday streets—just watch for motorbike snatch theft near roads."
+      },
+      {
+        name: "George Town (Penang)",
+        country: "Malaysia",
+        flag: "🇲🇾",
+        safety: 8.1, food: 9.7, cost: 8.1, weather: 7.0, vibe: 8.6, hub: 7.6,
+        mealPrice: "~2.50€ (12 MYR)",
+        note: "UNESCO heritage island widely ranked among Asia's #1 street food capitals, with relaxed walkable streets, wide English fluency, and warm equatorial showers."
+      },
+      {
+        name: "Kota Kinabalu",
+        country: "Malaysia",
+        flag: "🇲🇾",
+        safety: 7.9, food: 8.1, cost: 7.9, weather: 7.2, vibe: 8.5, hub: 7.8,
+        mealPrice: "~2.80€ (14 MYR)",
+        note: "Laid-back Borneo gateway to Mount Kinabalu, tropical coral islands, and wildlife reserves, featuring fresh seafood markets and friendly local hospitality."
+      },
+
+      // VIETNAM (4)
+      {
+        name: "Da Nang",
+        country: "Vietnam",
+        flag: "🇻🇳",
+        safety: 8.4, food: 9.0, cost: 8.8, weather: 8.1, vibe: 8.7, hub: 8.2,
+        mealPrice: "~2.20€ (60k VND)",
+        note: "Clean, wide coastal city with long sandy beaches, safe evening promenades, central Vietnamese cuisine, and 30-minute access to Hoi An and Hue."
+      },
+      {
+        name: "Ho Chi Minh City",
+        country: "Vietnam",
+        flag: "🇻🇳",
+        safety: 7.4, food: 9.4, cost: 8.5, weather: 7.4, vibe: 8.5, hub: 8.7,
+        mealPrice: "~2.30€ (65k VND)",
+        note: "High-energy metropolis with vibrant street food and café culture, very safe to walk at night despite chaotic scooter traffic, and easy Mekong Delta trips."
+      },
+      {
+        name: "Hanoi",
+        country: "Vietnam",
+        flag: "🇻🇳",
+        safety: 7.8, food: 9.5, cost: 8.7, weather: 6.9, vibe: 8.3, hub: 8.4,
+        mealPrice: "~2.00€ (55k VND)",
+        note: "Historic lakeside capital with world-famous northern Vietnamese cuisine, safe lively streets, cool misty winters, and direct access to Ha Long Bay and Ninh Binh."
+      },
+      {
+        name: "Hoi An",
+        country: "Vietnam",
+        flag: "🇻🇳",
+        safety: 8.6, food: 9.1, cost: 8.6, weather: 8.0, vibe: 8.9, hub: 7.3,
+        mealPrice: "~2.50€ (70k VND)",
+        note: "Lantern-lit riverside town surrounded by rice paddies and An Bang Beach, offering a slow, bicycle-friendly pace and calm, safe streets."
+      },
+
+      // THAILAND (3)
+      {
+        name: "Bangkok",
+        country: "Thailand",
+        flag: "🇹🇭",
+        safety: 7.4, food: 9.6, cost: 7.9, weather: 7.3, vibe: 8.7, hub: 9.5,
+        mealPrice: "~2.60€ (100 THB)",
+        note: "Unmatched street food capital with modern skytrains, safe bustling night markets, and fast regional links to Thai islands and neighboring countries."
+      },
+      {
+        name: "Chiang Mai",
+        country: "Thailand",
+        flag: "🇹🇭",
+        safety: 8.5, food: 9.0, cost: 8.6, weather: 8.6, vibe: 9.2, hub: 7.5,
+        mealPrice: "~2.10€ (80 THB)",
+        note: "Relaxed northern mountain city famous for warm hospitality, safe walkable lanes, café culture, and lush valleys, with seasonal smoke in March–April."
+      },
+      {
+        name: "Phuket",
+        country: "Thailand",
+        flag: "🇹🇭",
+        safety: 7.5, food: 8.5, cost: 6.7, weather: 8.1, vibe: 8.0, hub: 8.1,
+        mealPrice: "~3.50€ (135 THB)",
+        note: "Andaman Sea island hub with direct international flights, turquoise bays, and ferry hops to Phi Phi and Krabi, though pricier and more tourist-heavy."
+      },
+
+      // INDONESIA (3)
+      {
+        name: "Bali (Ubud / Canggu)",
+        country: "Indonesia",
+        flag: "🇮🇩",
+        safety: 7.6, food: 8.7, cost: 7.7, weather: 8.4, vibe: 9.1, hub: 7.8,
+        mealPrice: "~3.20€ (55k IDR)",
+        note: "Lush tropical island blending surf beaches, terraced rice fields, wellness culture, and warm Balinese hospitality, paired with heavy scooter traffic."
+      },
+      {
+        name: "Yogyakarta",
+        country: "Indonesia",
+        flag: "🇮🇩",
+        safety: 7.8, food: 8.4, cost: 8.9, weather: 7.7, vibe: 9.0, hub: 7.2,
+        mealPrice: "~1.80€ (30k IDR)",
+        note: "Javanese cultural heartland next to Borobudur and Prambanan temples, offering low daily costs, safe community streets, and a gentle student-city atmosphere."
+      },
+      {
+        name: "Jakarta",
+        country: "Indonesia",
+        flag: "🇮🇩",
+        safety: 5.4, food: 8.6, cost: 7.8, weather: 6.4, vibe: 7.6, hub: 8.5,
+        mealPrice: "~2.70€ (47k IDR)",
+        note: "Massive commercial capital with great Indonesian dining and strong domestic flight connections across the archipelago, offset by gridlock and lower walkability."
+      },
+
+      // PHILIPPINES (3)
+      {
+        name: "Cebu City",
+        country: "Philippines",
+        flag: "🇵🇭",
+        safety: 6.1, food: 7.8, cost: 8.1, weather: 7.8, vibe: 9.1, hub: 8.4,
+        mealPrice: "~2.80€ (175 PHP)",
+        note: "Central Visayas island hub with wide English fluency, friendly locals, and quick ferry/flight access to Bohol, Moalboal, and Siargao."
+      },
+      {
+        name: "El Nido (Palawan)",
+        country: "Philippines",
+        flag: "🇵🇭",
+        safety: 7.5, food: 7.4, cost: 7.2, weather: 8.2, vibe: 9.0, hub: 6.2,
+        mealPrice: "~4.20€ (260 PHP)",
+        note: "Dramatic limestone karst lagoons and island-hopping paradise with safe small-town vibes, though more remote with slower internet and higher island prices."
+      },
+      {
+        name: "Manila (BGC / Makati)",
+        country: "Philippines",
+        flag: "🇵🇭",
+        safety: 4.6, food: 8.0, cost: 7.5, weather: 7.1, vibe: 8.7, hub: 8.6,
+        mealPrice: "~3.20€ (200 PHP)",
+        note: "Polished business districts (BGC/Makati) with high English fluency and lively dining, contrasted by heavy traffic, typhoon season, and lower street safety outside core zones."
+      },
+
+      // SINGAPORE (1)
+      {
+        name: "Singapore",
+        country: "Singapore",
+        flag: "🇸🇬",
+        safety: 9.6, food: 9.5, cost: 3.2, weather: 6.5, vibe: 7.5, hub: 9.8,
+        mealPrice: "~4.80€ (7 SGD)",
+        note: "World-leading personal street safety at any hour, Michelin-recognized hawker centers, and Asia's top airport, balanced by high accommodation costs and humid heat."
+      },
+
+      // CAMBODIA (2)
+      {
+        name: "Siem Reap",
+        country: "Cambodia",
+        flag: "🇰🇭",
+        safety: 7.6, food: 8.0, cost: 8.8, weather: 7.8, vibe: 9.0, hub: 7.0,
+        mealPrice: "~2.50€ ($2.70 USD)",
+        note: "Gateway to Angkor Wat with leafy riverside cafés, safe walkable central streets, warm hospitality, and affordable living."
+      },
+      {
+        name: "Phnom Penh",
+        country: "Cambodia",
+        flag: "🇰🇭",
+        safety: 5.5, food: 7.9, cost: 8.5, weather: 7.5, vibe: 8.3, hub: 7.4,
+        mealPrice: "~2.80€ ($3.00 USD)",
+        note: "Rapidly developing Mekong riverside capital with affordable dining and easy regional buses/flights, requiring extra care against bag-snatching at night."
+      },
+
+      // LAOS (1)
+      {
+        name: "Luang Prabang",
+        country: "Laos",
+        flag: "🇱🇦",
+        safety: 8.5, food: 8.1, cost: 8.6, weather: 8.0, vibe: 9.3, hub: 6.6,
+        mealPrice: "~2.40€ (55k LAK)",
+        note: "Tranquil UNESCO mountain town at the confluence of the Mekong and Nam Khan rivers, prized for serene temples, waterfalls, and exceptionally safe, gentle streets."
+      }
+    ];
+
+    const countries = ["All", "Malaysia", "Vietnam", "Thailand", "Indonesia", "Philippines", "Singapore", "Cambodia", "Laos"];
+
+    function getBarColor(val) {
+      if (val >= 8) return "var(--good)";
+      if (val >= 6.5) return "var(--accent)";
+      if (val >= 5.5) return "var(--warn)";
+      return "var(--bad)";
+    }
+
+    function applyPreset(type) {
+      const presets = {
+        balanced: { safety: 7, food: 9,  cost: 8,  weather: 8, vibe: 8,  hub: 9  },
+        explorer: { safety: 5, food: 10, cost: 7,  weather: 7, vibe: 7,  hub: 10 },
+        chill:    { safety: 9, food: 8,  cost: 8,  weather: 9, vibe: 10, hub: 7  },
+        budget:   { safety: 6, food: 9,  cost: 10, weather: 7, vibe: 8,  hub: 7  }
+      };
+      const p = presets[type];
+      document.getElementById("w-safety").value = p.safety;
+      document.getElementById("w-food").value = p.food;
+      document.getElementById("w-cost").value = p.cost;
+      document.getElementById("w-weather").value = p.weather;
+      document.getElementById("w-vibe").value = p.vibe;
+      document.getElementById("w-hub").value = p.hub;
+      render();
+    }
+
+    function setCountry(c) {
+      selectedCountry = c;
+      render();
+    }
+
+    function renderFilters() {
+      const box = document.getElementById("country-filters");
+      box.innerHTML = countries.map(c => `
+        <button class="${selectedCountry === c ? "active" : ""}" onclick="setCountry('${c}')">
+          ${c === "All" ? `🌏 All (${cities.length})` : c}
+        </button>
+      `).join("");
+    }
+
+    function render() {
+      renderFilters();
+
+      const w = {
+        safety: +document.getElementById("w-safety").value,
+        food: +document.getElementById("w-food").value,
+        cost: +document.getElementById("w-cost").value,
+        weather: +document.getElementById("w-weather").value,
+        vibe: +document.getElementById("w-vibe").value,
+        hub: +document.getElementById("w-hub").value
+      };
+
+      document.getElementById("w-safety-val").textContent = `${w.safety} / 10`;
+      document.getElementById("w-food-val").textContent = `${w.food} / 10`;
+      document.getElementById("w-cost-val").textContent = `${w.cost} / 10`;
+      document.getElementById("w-weather-val").textContent = `${w.weather} / 10`;
+      document.getElementById("w-vibe-val").textContent = `${w.vibe} / 10`;
+      document.getElementById("w-hub-val").textContent = `${w.hub} / 10`;
+
+      const totalWeight = w.safety + w.food + w.cost + w.weather + w.vibe + w.hub || 1;
+      const maxPts = totalWeight * 10;
+
+      const filtered = selectedCountry === "All"
+        ? cities
+        : cities.filter(c => c.country === selectedCountry);
+
+      const ranked = filtered
+        .map(c => {
+          const rawScore =
+            c.safety * w.safety +
+            c.food * w.food +
+            c.cost * w.cost +
+            c.weather * w.weather +
+            c.vibe * w.vibe +
+            c.hub * w.hub;
+          const match = Math.round((rawScore / maxPts) * 100);
+          return { ...c, rawScore, match };
+        })
+        .sort((a, b) => b.rawScore - a.rawScore);
+
+      document.getElementById("count-label").textContent =
+        `Showing ${ranked.length} cities ranked by your sliders`;
+
+      const grid = document.getElementById("cities-grid");
+      grid.innerHTML = ranked.map((c, idx) => `
+        <article class="city-card ${idx === 0 ? "top-pick" : ""}">
+          <div>
+            <span class="rank-badge">#${idx + 1} · ${c.match}%</span>
+            <div class="city-title">${c.flag} ${c.name}</div>
+            <div class="city-country">${c.country}</div>
+            <div class="city-note">${c.note}</div>
+
+            <div class="metrics">
+              ${renderBar("📍 Central & Day Trips", c.hub, w.hub === 0)}
+              ${renderBar("🍽️ Great Food", c.food, w.food === 0)}
+              ${renderBar("☀️ Good Weather", c.weather, w.weather === 0)}
+              ${renderBar("🤝 Good People & Vibe", c.vibe, w.vibe === 0)}
+              ${renderBar("💰 Cheap Living", c.cost, w.cost === 0)}
+              ${renderBar("🛡️ Personal Street Safety", c.safety, w.safety === 0)}
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="footer-row">
+              <span>🍽️ Casual meal:</span>
+              <strong>${c.mealPrice}</strong>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderBar(label, value, ignored) {
+      return `
+        <div class="metric-row" style="opacity: ${ignored ? 0.35 : 1}">
+          <div class="metric-label">
+            <span>${label} ${ignored ? "(ignored)" : ""}</span>
+            <strong>${value.toFixed(1)}/10</strong>
+          </div>
+          <div class="bar-bg">
+            <div class="bar-fill" style="width: ${value * 10}%; background: ${getBarColor(value)};"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    render();
+  </script>
+</body>
+</html>
